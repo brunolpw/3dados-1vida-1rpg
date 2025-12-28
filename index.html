@@ -7,7 +7,7 @@
     <meta name="description" content="Ficha de RPG d6 - 3 Dados e 1 Vida">
     <title>Ficha RPG d6 PWA</title>
     
-    <!-- PWA Manifest (Inline para manter arquivo único) -->
+    <!-- PWA Manifest (Inline) -->
     <link rel="manifest" id="pwa-manifest">
     
     <!-- Tailwind CSS -->
@@ -39,7 +39,6 @@
             border-radius: 10px;
         }
 
-        /* Estética de Aplicativo */
         .app-card {
             background: rgba(24, 24, 27, 0.6);
             backdrop-filter: blur(10px);
@@ -52,84 +51,105 @@
     <div class="max-w-4xl mx-auto mt-2">
         
         <!-- Header & Controles de APP -->
-        <div class="flex justify-between items-center mb-8 sticky top-0 z-50 bg-[#09090b]/80 py-2 backdrop-blur-md">
+        <div class="flex justify-between items-center mb-6 sticky top-0 z-50 bg-[#09090b]/80 py-2 backdrop-blur-md">
             <div>
                 <h1 class="text-[10px] font-black uppercase tracking-[0.4em] text-red-600">Protocolo de Combate</h1>
             </div>
             <div class="flex items-center gap-3">
-                <span id="save-msg" class="text-[9px] font-bold uppercase text-emerald-500 opacity-0 transition-opacity">Dados Gravados</span>
+                <span id="save-msg" class="text-[9px] font-bold uppercase text-emerald-500 opacity-0 transition-opacity">Ficha Guardada</span>
                 <button onclick="saveSheet()" class="bg-zinc-100 hover:bg-white text-black px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center gap-2 active:scale-95 transition-all">
-                    <i data-lucide="save" class="w-3.5 h-3.5"></i> Salvar
+                    <i data-lucide="save" class="w-3.5 h-3.5"></i> Guardar
                 </button>
             </div>
         </div>
 
-        <!-- Pontos de Vida (Destaque Superior) -->
-        <section class="app-card rounded-[2rem] p-6 mb-10 border-red-900/30">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-6 mb-6">
-                <div class="flex items-center gap-4">
-                    <div class="p-3 bg-red-600 rounded-2xl shadow-[0_0_20px_rgba(220,38,38,0.3)]">
-                        <i data-lucide="heart" class="text-white fill-current w-6 h-6"></i>
+        <!-- Barras de Status (Vida e EXP) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+            <!-- Vida -->
+            <section class="app-card rounded-[2rem] p-5 border-red-900/30">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-red-600 rounded-xl shadow-lg shadow-red-900/20">
+                            <i data-lucide="heart" class="text-white fill-current w-5 h-5"></i>
+                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-widest">Integridade</span>
                     </div>
-                    <div>
-                        <h2 class="text-2xl font-black uppercase tracking-tighter italic">Integridade Vital</h2>
-                        <p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Monitor de Saúde do Sujeito</p>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2 bg-black/40 p-2 rounded-2xl border border-white/5 shadow-inner">
-                    <div class="flex flex-col items-center px-4">
-                        <label class="text-[8px] font-black text-zinc-600 uppercase mb-1">Atual</label>
-                        <input type="number" id="hp-current" oninput="updateHP()" class="bg-transparent text-3xl font-black text-white w-14 text-center outline-none focus:text-red-500" value="10">
-                    </div>
-                    <div class="text-2xl font-thin text-zinc-800">/</div>
-                    <div class="flex flex-col items-center px-4">
-                        <label class="text-[8px] font-black text-zinc-600 uppercase mb-1">Máximo</label>
-                        <input type="number" id="hp-max" oninput="updateHP()" class="bg-transparent text-3xl font-black text-zinc-500 w-14 text-center outline-none focus:text-white" value="10">
+                    <div class="flex items-center gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5">
+                        <input type="number" id="hp-current" oninput="updateBars()" class="bg-transparent text-xl font-black text-white w-10 text-center outline-none" value="10">
+                        <span class="text-zinc-700">/</span>
+                        <input type="number" id="hp-max" oninput="updateBars()" class="bg-transparent text-xl font-black text-zinc-500 w-10 text-center outline-none" value="10">
                     </div>
                 </div>
-            </div>
+                <div class="relative h-2.5 bg-zinc-950 rounded-full overflow-hidden border border-white/5">
+                    <div id="hp-bar" class="h-full bg-gradient-to-r from-red-900 to-red-500 transition-all duration-700" style="width: 100%"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-4">
+                    <button onclick="changeStatus('hp-current', -1)" class="py-2 bg-zinc-900 hover:bg-red-900/20 rounded-lg text-[9px] font-black uppercase tracking-widest border border-zinc-800">-1 PV</button>
+                    <button onclick="changeStatus('hp-current', 1)" class="py-2 bg-zinc-900 hover:bg-emerald-900/20 rounded-lg text-[9px] font-black uppercase tracking-widest border border-zinc-800">+1 PV</button>
+                </div>
+            </section>
 
-            <div class="relative h-4 bg-zinc-950 rounded-full border border-white/5 p-0.5 overflow-hidden">
-                <div id="hp-bar" class="h-full bg-gradient-to-r from-red-900 to-red-500 rounded-full transition-all duration-700 shadow-[0_0_15px_rgba(220,38,38,0.3)]" style="width: 100%"></div>
-            </div>
+            <!-- Experiência -->
+            <section class="app-card rounded-[2rem] p-5 border-zinc-700/30">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-zinc-100 rounded-xl shadow-lg">
+                            <i data-lucide="star" class="text-black fill-current w-5 h-5"></i>
+                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-widest">Experiência</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5">
+                        <input type="number" id="exp-current" oninput="updateBars()" class="bg-transparent text-xl font-black text-white w-12 text-center outline-none" value="0">
+                        <span class="text-zinc-700">/</span>
+                        <input type="number" id="exp-max" oninput="updateBars()" class="bg-transparent text-xl font-black text-zinc-500 w-12 text-center outline-none" value="100">
+                    </div>
+                </div>
+                <div class="relative h-2.5 bg-zinc-950 rounded-full overflow-hidden border border-white/5">
+                    <div id="exp-bar" class="h-full bg-gradient-to-r from-zinc-600 to-zinc-200 transition-all duration-700" style="width: 0%"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-4">
+                    <button onclick="changeStatus('exp-current', -10)" class="py-2 bg-zinc-900 rounded-lg text-[9px] font-black uppercase tracking-widest border border-zinc-800">-10 EXP</button>
+                    <button onclick="changeStatus('exp-current', 10)" class="py-2 bg-zinc-900 rounded-lg text-[9px] font-black uppercase tracking-widest border border-zinc-800">+10 EXP</button>
+                </div>
+            </section>
+        </div>
 
-            <div class="grid grid-cols-2 gap-3 mt-6">
-                <button onclick="changeHP(-1)" class="py-3 bg-zinc-900 hover:bg-red-900/20 rounded-xl text-[10px] font-black border border-zinc-800 uppercase tracking-widest transition-all">Dano (-1)</button>
-                <button onclick="changeHP(1)" class="py-3 bg-zinc-900 hover:bg-emerald-900/20 rounded-xl text-[10px] font-black border border-zinc-800 uppercase tracking-widest transition-all">Cura (+1)</button>
-            </div>
-        </section>
-
-        <!-- Informação Básica -->
+        <!-- Identificação -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-8 mb-12">
             <div class="md:col-span-9 space-y-6">
-                <div class="relative border-b border-zinc-800 focus-within:border-red-600 transition-colors">
-                    <label class="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Nome do Indivíduo</label>
-                    <input id="char-name" type="text" class="bg-transparent w-full text-3xl font-black py-2 outline-none uppercase tracking-tighter" placeholder="IDENTIFICAÇÃO">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1 relative border-b border-zinc-800 focus-within:border-red-600 transition-colors">
+                        <label class="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Nome do Indivíduo</label>
+                        <input id="char-name" type="text" class="bg-transparent w-full text-3xl font-black py-1 outline-none uppercase tracking-tighter" placeholder="IDENTIFICAÇÃO">
+                    </div>
+                    <div class="w-24 relative border-b border-zinc-800 focus-within:border-red-600 transition-colors">
+                        <label class="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Nível</label>
+                        <input id="char-level" type="number" class="bg-transparent w-full text-3xl font-black py-1 outline-none text-center" value="1">
+                    </div>
                 </div>
                 <div class="relative border-b border-zinc-800 focus-within:border-red-600 transition-colors">
                     <label class="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Raça / Classificação</label>
-                    <input id="char-race" type="text" class="bg-transparent w-full text-xl font-bold py-2 outline-none uppercase tracking-widest" placeholder="ORIGEM">
+                    <input id="char-race" type="text" class="bg-transparent w-full text-xl font-bold py-1 outline-none uppercase tracking-widest" placeholder="ORIGEM">
                 </div>
             </div>
-            <div class="md:col-span-3 flex flex-col items-center justify-center border border-zinc-800 rounded-3xl bg-zinc-950/20 p-4">
-                <i data-lucide="user" class="text-zinc-800 w-10 h-10"></i>
-                <span class="text-[8px] font-black text-zinc-700 uppercase mt-2 tracking-widest">Avatar</span>
+            <div class="md:col-span-3 flex flex-col items-center justify-center border border-zinc-800 rounded-3xl bg-zinc-950/20 p-4 opacity-50">
+                <i data-lucide="user" class="text-zinc-600 w-8 h-8"></i>
+                <span class="text-[8px] font-black text-zinc-700 uppercase mt-2 tracking-widest tracking-tighter">Avatar</span>
             </div>
         </div>
 
-        <!-- Main Content -->
+        <!-- Main Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
             
             <!-- Atributos -->
             <section class="lg:col-span-4 space-y-6">
-                <h3 class="text-center text-[9px] font-black text-red-700 uppercase tracking-[0.4em] opacity-40 italic">— Núcleo Atributivo —</h3>
+                <h3 class="text-center text-[9px] font-black text-red-700 uppercase tracking-[0.4em] opacity-40 italic">— Atributos —</h3>
                 <div id="attributes-list" class="space-y-4">
-                    <!-- Dinâmico via JS -->
+                    <!-- Dinâmico -->
                 </div>
             </section>
 
-            <!-- Itens Ativos -->
+            <!-- Equipamento -->
             <section class="lg:col-span-5">
                 <div class="app-card rounded-[2rem] overflow-hidden flex flex-col min-h-[450px]">
                     <div class="bg-zinc-800/40 p-4 flex justify-between items-center border-b border-zinc-800">
@@ -148,20 +168,20 @@
             <section class="lg:col-span-3 space-y-6">
                 <div class="space-y-2">
                     <label class="text-[9px] font-black text-zinc-600 uppercase flex items-center gap-2"><i data-lucide="backpack" class="w-3 h-3"></i> Mochila</label>
-                    <textarea id="char-inv" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-xs h-32 focus:border-red-900 outline-none resize-none transition-all custom-scrollbar" placeholder="Geral..."></textarea>
+                    <textarea id="char-inv" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-xs h-32 focus:border-red-900 outline-none resize-none font-sans custom-scrollbar" placeholder="Geral..."></textarea>
                 </div>
                 <div class="space-y-2">
-                    <label class="text-[9px] font-black text-zinc-600 uppercase flex items-center gap-2"><i data-lucide="scroll" class="w-3 h-3"></i> Crónicas</label>
-                    <textarea id="char-notes" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-xs h-60 focus:border-red-900 outline-none resize-none transition-all custom-scrollbar" placeholder="Notas da sessão..."></textarea>
+                    <label class="text-[9px] font-black text-zinc-600 uppercase flex items-center gap-2"><i data-lucide="scroll" class="w-3 h-3"></i> Notas</label>
+                    <textarea id="char-notes" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-xs h-60 focus:border-red-900 outline-none resize-none font-sans custom-scrollbar" placeholder="Anotações..."></textarea>
                 </div>
             </section>
         </div>
     </div>
 
-    <!-- Modal de Dados -->
+    <!-- Modal de Rolagem -->
     <div id="dice-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-[100] p-6 backdrop-blur-xl hidden">
-        <div class="bg-zinc-900 border border-zinc-800 p-10 rounded-[3rem] w-full max-w-sm text-center shadow-2xl animate-in zoom-in duration-300">
-            <h4 id="modal-title" class="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-10 italic">Verificando...</h4>
+        <div class="bg-zinc-900 border border-zinc-800 p-10 rounded-[3rem] w-full max-w-sm text-center shadow-2xl">
+            <h4 id="modal-title" class="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-10 italic">Verificação</h4>
             <div id="dice-results" class="flex flex-wrap justify-center gap-4 mb-8"></div>
             
             <div class="flex items-center justify-center gap-3 text-zinc-500 font-bold text-[10px] uppercase tracking-widest mb-10">
@@ -171,18 +191,18 @@
             </div>
 
             <div class="mb-12">
-                <p class="text-[9px] font-black text-zinc-600 uppercase tracking-[0.5em] mb-2">Total Consolidado</p>
+                <p class="text-[9px] font-black text-zinc-600 uppercase tracking-[0.5em] mb-2">Total Final</p>
                 <div id="modal-total" class="text-8xl font-black text-white tracking-tighter">0</div>
             </div>
 
-            <button onclick="closeModal()" class="w-full py-5 bg-white text-black font-black uppercase tracking-widest rounded-2xl active:scale-95 transition-all shadow-xl">Confirmar</button>
+            <button onclick="closeModal()" class="w-full py-5 bg-white text-black font-black uppercase tracking-widest rounded-2xl active:scale-95 transition-all">Confirmar</button>
         </div>
     </div>
 
     <script>
-        // --- LOGICA PWA (Inlined Service Worker) ---
+        // --- PWA LOGIC ---
         const swCode = `
-            const CACHE_NAME = 'rpg-v1';
+            const CACHE_NAME = 'rpg-v2';
             self.addEventListener('install', e => {
                 e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./'])));
             });
@@ -196,7 +216,6 @@
             navigator.serviceWorker.register(swUrl).catch(e => console.error(e));
         }
 
-        // --- MANIFEST PWA ---
         const manifest = {
             "name": "Ficha RPG d6",
             "short_name": "RPG d6",
@@ -209,22 +228,26 @@
         const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
         document.getElementById('pwa-manifest').setAttribute('href', URL.createObjectURL(manifestBlob));
 
-        // --- DADOS E PERSISTENCIA ---
-        const DB_KEY = 'rpg_pwa_sheet_data';
+        // --- DADOS ---
+        const DB_KEY = 'rpg_pwa_v2_data';
         let sheet = {
-            nome: "", raca: "",
+            nome: "", raca: "", level: 1,
             atributos: {
                 CORPO: { v: 2, b: 0 },
                 MENTE: { v: 2, b: 0 },
                 ESPÍRITO: { v: 2, b: 0 }
             },
             vida: { c: 10, m: 10 },
+            exp: { c: 0, m: 100 },
             itens: [], gear: "", notes: ""
         };
 
         window.onload = () => {
             const saved = localStorage.getItem(DB_KEY);
-            if (saved) sheet = JSON.parse(saved);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                sheet = { ...sheet, ...parsed };
+            }
             loadUI();
             lucide.createIcons();
         };
@@ -232,8 +255,11 @@
         function saveSheet() {
             sheet.nome = document.getElementById('char-name').value;
             sheet.raca = document.getElementById('char-race').value;
+            sheet.level = parseInt(document.getElementById('char-level').value) || 1;
             sheet.vida.c = parseInt(document.getElementById('hp-current').value) || 0;
             sheet.vida.m = parseInt(document.getElementById('hp-max').value) || 0;
+            sheet.exp.c = parseInt(document.getElementById('exp-current').value) || 0;
+            sheet.exp.m = parseInt(document.getElementById('exp-max').value) || 100;
             sheet.gear = document.getElementById('char-inv').value;
             sheet.notes = document.getElementById('char-notes').value;
             
@@ -247,27 +273,36 @@
         function loadUI() {
             document.getElementById('char-name').value = sheet.nome;
             document.getElementById('char-race').value = sheet.raca;
+            document.getElementById('char-level').value = sheet.level;
             document.getElementById('hp-current').value = sheet.vida.c;
             document.getElementById('hp-max').value = sheet.vida.m;
+            document.getElementById('exp-current').value = sheet.exp.c;
+            document.getElementById('exp-max').value = sheet.exp.m;
             document.getElementById('char-inv').value = sheet.gear;
             document.getElementById('char-notes').value = sheet.notes;
-            updateHP();
+            updateBars();
             renderAttrs();
             renderItems();
         }
 
-        // --- VIDA ---
-        function updateHP() {
-            const c = parseInt(document.getElementById('hp-current').value) || 0;
-            const m = parseInt(document.getElementById('hp-max').value) || 1;
-            const pct = (c / m) * 100;
-            document.getElementById('hp-bar').style.width = Math.min(100, Math.max(0, pct)) + '%';
+        // --- STATUS ---
+        function updateBars() {
+            // Vida
+            const hc = parseInt(document.getElementById('hp-current').value) || 0;
+            const hm = parseInt(document.getElementById('hp-max').value) || 1;
+            document.getElementById('hp-bar').style.width = Math.min(100, Math.max(0, (hc/hm)*100)) + '%';
+            
+            // EXP
+            const ec = parseInt(document.getElementById('exp-current').value) || 0;
+            const em = parseInt(document.getElementById('exp-max').value) || 1;
+            document.getElementById('exp-bar').style.width = Math.min(100, Math.max(0, (ec/em)*100)) + '%';
         }
-        function changeHP(d) {
-            const el = document.getElementById('hp-current');
-            const m = parseInt(document.getElementById('hp-max').value) || 1;
-            el.value = Math.max(0, Math.min(m, (parseInt(el.value) || 0) + d));
-            updateHP();
+
+        function changeStatus(id, d) {
+            const el = document.getElementById(id);
+            const val = (parseInt(el.value) || 0) + d;
+            el.value = Math.max(0, val);
+            updateBars();
         }
 
         // --- ATRIBUTOS ---
@@ -279,8 +314,8 @@
                 div.className = 'app-card p-4 rounded-2xl flex flex-col gap-4';
                 div.innerHTML = `
                     <div class="flex justify-between items-center">
-                        <span class="text-[10px] font-black text-zinc-600 tracking-widest">${k}</span>
-                        <button onclick="roll('${k}')" class="text-red-600 hover:scale-110 active:scale-90 transition-transform"><i data-lucide="dice-6" class="w-5 h-5"></i></button>
+                        <span class="text-[10px] font-black text-zinc-600 tracking-widest uppercase">${k}</span>
+                        <button onclick="roll('${k}')" class="text-red-600 transition-transform active:scale-90"><i data-lucide="dice-6" class="w-5 h-5"></i></button>
                     </div>
                     <div class="flex items-center justify-between">
                         <div class="text-center flex-1">
@@ -308,14 +343,14 @@
         // --- ITENS ---
         function renderItems() {
             const cont = document.getElementById('items-list');
-            cont.innerHTML = sheet.itens.length === 0 ? '<p class="text-center py-10 opacity-10 text-[10px] uppercase font-black tracking-widest italic">Slot Vazio</p>' : '';
+            cont.innerHTML = sheet.itens.length === 0 ? '<p class="text-center py-10 opacity-10 text-[10px] uppercase font-black italic">Vazio</p>' : '';
             sheet.itens.forEach((it, i) => {
                 const div = document.createElement('div');
                 div.className = 'bg-black/20 border border-zinc-800 p-4 rounded-2xl group relative';
                 div.innerHTML = `
-                    <input value="${it.n}" onchange="upIt(${i},'n',this.value)" placeholder="NOME DO ITEM" class="bg-transparent w-full text-xs font-black text-white outline-none mb-1">
-                    <input value="${it.e}" onchange="upIt(${i},'e',this.value)" placeholder="EFEITO / DANO" class="bg-transparent w-full text-[9px] text-amber-500 italic outline-none">
-                    <button onclick="remIt(${i})" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-zinc-800 hover:text-red-600 transition-opacity"><i data-lucide="x" class="w-3 h-3"></i></button>
+                    <input value="${it.n}" onchange="upIt(${i},'n',this.value)" placeholder="ITEM" class="bg-transparent w-full text-xs font-black text-white outline-none mb-1">
+                    <input value="${it.e}" onchange="upIt(${i},'e',this.value)" placeholder="EFEITO" class="bg-transparent w-full text-[9px] text-amber-500 italic outline-none">
+                    <button onclick="remIt(${i})" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-zinc-800 hover:text-red-600"><i data-lucide="x" class="w-3 h-3"></i></button>
                 `;
                 cont.appendChild(div);
             });
@@ -332,7 +367,7 @@
             for(let i=0; i<at.v; i++) res.push(Math.floor(Math.random() * 6) + 1);
             const sum = res.reduce((a, b) => a + b, 0);
             
-            document.getElementById('modal-title').innerText = `VERIFICAÇÃO: ${k}`;
+            document.getElementById('modal-title').innerText = `INVESTIGAÇÃO: ${k}`;
             document.getElementById('modal-sum').innerText = sum;
             document.getElementById('modal-bonus').innerText = at.b;
             document.getElementById('modal-total').innerText = sum + at.b;
