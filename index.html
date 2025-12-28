@@ -3,20 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ficha de RPG - Sistema d6</title>
-    <!-- Tailwind para Estilo -->
+    <meta name="theme-color" content="#09090b">
+    <meta name="description" content="Ficha de RPG d6 - 3 Dados e 1 Vida">
+    <title>Ficha RPG d6 PWA</title>
+    
+    <!-- PWA Manifest (Inline para manter arquivo único) -->
+    <link rel="manifest" id="pwa-manifest">
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide para Ícones -->
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;700;900&display=swap');
         
         body {
             font-family: 'Crimson Pro', serif;
             background-color: #09090b;
+            color: #e4e4e7;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* Esconder setas de input number */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -26,105 +34,112 @@
         .custom-scrollbar::-webkit-scrollbar {
             width: 4px;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #18181b;
-        }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #7f1d1d;
+            background: #450a0a;
             border-radius: 10px;
+        }
+
+        /* Estética de Aplicativo */
+        .app-card {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(63, 63, 70, 0.4);
         }
     </style>
 </head>
-<body class="text-zinc-100 p-4 pb-12 selection:bg-red-900/40">
+<body class="p-4 pb-24 md:pb-8">
 
-    <div class="max-w-4xl mx-auto border-2 border-zinc-800 p-6 md:p-8 bg-zinc-900/40 rounded-xl shadow-2xl relative mt-4">
+    <div class="max-w-4xl mx-auto mt-2">
         
-        <!-- Botão Salvar (Manual conforme pedido) -->
-        <div class="flex justify-end mb-6 sticky top-2 z-40">
-            <div id="save-status" class="mr-4 self-center text-[10px] font-bold uppercase tracking-widest text-emerald-500 opacity-0 transition-opacity">
-                Salvo com sucesso!
+        <!-- Header & Controles de APP -->
+        <div class="flex justify-between items-center mb-8 sticky top-0 z-50 bg-[#09090b]/80 py-2 backdrop-blur-md">
+            <div>
+                <h1 class="text-[10px] font-black uppercase tracking-[0.4em] text-red-600">Protocolo de Combate</h1>
             </div>
-            <button onclick="saveToLocal()" class="flex items-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest shadow-lg transition-all active:scale-95">
-                <i data-lucide="save" class="w-4 h-4"></i> Guardar Ficha
-            </button>
-        </div>
-
-        <!-- Vida (Topo) -->
-        <header class="mb-10">
-            <div class="bg-red-950/20 border border-red-900/30 p-6 rounded-2xl">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-red-600 p-2.5 rounded-xl shadow-lg">
-                            <i data-lucide="heart" class="text-white fill-white w-6 h-6"></i>
-                        </div>
-                        <h2 class="text-xl font-black uppercase tracking-tighter text-red-500">Pontos de Vida</h2>
-                    </div>
-                    
-                    <div class="flex items-center gap-4 bg-black/40 p-2 rounded-xl border border-white/5">
-                        <div class="flex flex-col items-center px-4">
-                            <span class="text-[10px] uppercase font-bold text-zinc-500">Atual</span>
-                            <input type="number" id="hp-current" oninput="updateHPBar()" class="bg-transparent text-2xl font-black text-white w-16 text-center outline-none focus:text-red-500" value="10">
-                        </div>
-                        <div class="text-2xl font-thin text-zinc-800">/</div>
-                        <div class="flex flex-col items-center px-4">
-                            <span class="text-[10px] uppercase font-bold text-zinc-500">Máximo</span>
-                            <input type="number" id="hp-max" oninput="updateHPBar()" class="bg-transparent text-2xl font-black text-zinc-500 w-16 text-center outline-none focus:text-white" value="10">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="relative h-6 bg-zinc-800 rounded-full overflow-hidden border border-white/5">
-                    <div id="hp-bar" class="absolute top-0 left-0 h-full bg-gradient-to-r from-red-800 to-red-600 transition-all duration-500" style="width: 100%"></div>
-                </div>
-                
-                <div class="flex gap-2 mt-4">
-                    <button onclick="adjustHP(-1)" class="flex-1 py-2 bg-zinc-800 hover:bg-red-900/40 rounded-lg text-xs font-bold transition-colors border border-transparent hover:border-red-800 uppercase">Dano -1</button>
-                    <button onclick="adjustHP(1)" class="flex-1 py-2 bg-zinc-800 hover:bg-green-900/40 rounded-lg text-xs font-bold transition-colors border border-transparent hover:border-green-800 uppercase">Cura +1</button>
-                </div>
-            </div>
-        </header>
-
-        <!-- Informações Básicas -->
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 mb-10">
-            <div class="md:col-span-8 space-y-6">
-                <div class="flex flex-col">
-                    <label class="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-black mb-1">Nome do Personagem</label>
-                    <input id="char-name" type="text" class="bg-transparent border-b border-zinc-800 focus:border-red-700 outline-none text-2xl py-1 font-bold" placeholder="Ex: Arthur Morgan">
-                </div>
-                <div class="flex flex-col">
-                    <label class="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-black mb-1">Raça</label>
-                    <input id="char-race" type="text" class="bg-transparent border-b border-zinc-800 focus:border-red-700 outline-none text-lg py-1" placeholder="Ex: Humano / Ciborgue">
-                </div>
-            </div>
-            <div class="md:col-span-4 flex flex-col items-center justify-center border-2 border-dashed border-zinc-800 rounded-2xl p-4 bg-zinc-900/50">
-                <i data-lucide="user-round" class="text-zinc-700 w-12 h-12"></i>
-                <span class="text-[9px] uppercase mt-2 text-zinc-600 font-bold">Retrato</span>
+            <div class="flex items-center gap-3">
+                <span id="save-msg" class="text-[9px] font-bold uppercase text-emerald-500 opacity-0 transition-opacity">Dados Gravados</span>
+                <button onclick="saveSheet()" class="bg-zinc-100 hover:bg-white text-black px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center gap-2 active:scale-95 transition-all">
+                    <i data-lucide="save" class="w-3.5 h-3.5"></i> Salvar
+                </button>
             </div>
         </div>
 
+        <!-- Pontos de Vida (Destaque Superior) -->
+        <section class="app-card rounded-[2rem] p-6 mb-10 border-red-900/30">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6 mb-6">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-red-600 rounded-2xl shadow-[0_0_20px_rgba(220,38,38,0.3)]">
+                        <i data-lucide="heart" class="text-white fill-current w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-black uppercase tracking-tighter italic">Integridade Vital</h2>
+                        <p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Monitor de Saúde do Sujeito</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 bg-black/40 p-2 rounded-2xl border border-white/5 shadow-inner">
+                    <div class="flex flex-col items-center px-4">
+                        <label class="text-[8px] font-black text-zinc-600 uppercase mb-1">Atual</label>
+                        <input type="number" id="hp-current" oninput="updateHP()" class="bg-transparent text-3xl font-black text-white w-14 text-center outline-none focus:text-red-500" value="10">
+                    </div>
+                    <div class="text-2xl font-thin text-zinc-800">/</div>
+                    <div class="flex flex-col items-center px-4">
+                        <label class="text-[8px] font-black text-zinc-600 uppercase mb-1">Máximo</label>
+                        <input type="number" id="hp-max" oninput="updateHP()" class="bg-transparent text-3xl font-black text-zinc-500 w-14 text-center outline-none focus:text-white" value="10">
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative h-4 bg-zinc-950 rounded-full border border-white/5 p-0.5 overflow-hidden">
+                <div id="hp-bar" class="h-full bg-gradient-to-r from-red-900 to-red-500 rounded-full transition-all duration-700 shadow-[0_0_15px_rgba(220,38,38,0.3)]" style="width: 100%"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mt-6">
+                <button onclick="changeHP(-1)" class="py-3 bg-zinc-900 hover:bg-red-900/20 rounded-xl text-[10px] font-black border border-zinc-800 uppercase tracking-widest transition-all">Dano (-1)</button>
+                <button onclick="changeHP(1)" class="py-3 bg-zinc-900 hover:bg-emerald-900/20 rounded-xl text-[10px] font-black border border-zinc-800 uppercase tracking-widest transition-all">Cura (+1)</button>
+            </div>
+        </section>
+
+        <!-- Informação Básica -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 mb-12">
+            <div class="md:col-span-9 space-y-6">
+                <div class="relative border-b border-zinc-800 focus-within:border-red-600 transition-colors">
+                    <label class="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Nome do Indivíduo</label>
+                    <input id="char-name" type="text" class="bg-transparent w-full text-3xl font-black py-2 outline-none uppercase tracking-tighter" placeholder="IDENTIFICAÇÃO">
+                </div>
+                <div class="relative border-b border-zinc-800 focus-within:border-red-600 transition-colors">
+                    <label class="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Raça / Classificação</label>
+                    <input id="char-race" type="text" class="bg-transparent w-full text-xl font-bold py-2 outline-none uppercase tracking-widest" placeholder="ORIGEM">
+                </div>
+            </div>
+            <div class="md:col-span-3 flex flex-col items-center justify-center border border-zinc-800 rounded-3xl bg-zinc-950/20 p-4">
+                <i data-lucide="user" class="text-zinc-800 w-10 h-10"></i>
+                <span class="text-[8px] font-black text-zinc-700 uppercase mt-2 tracking-widest">Avatar</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            
             <!-- Atributos -->
             <section class="lg:col-span-4 space-y-6">
-                <h3 class="text-center text-[10px] font-black uppercase tracking-[0.3em] text-red-600 mb-6 italic">— Atributos —</h3>
-                <div id="attributes-list" class="space-y-6">
-                    <!-- Dinâmico -->
+                <h3 class="text-center text-[9px] font-black text-red-700 uppercase tracking-[0.4em] opacity-40 italic">— Núcleo Atributivo —</h3>
+                <div id="attributes-list" class="space-y-4">
+                    <!-- Dinâmico via JS -->
                 </div>
             </section>
 
-            <!-- Itens Equipados -->
+            <!-- Itens Ativos -->
             <section class="lg:col-span-5">
-                <div class="border border-zinc-800 bg-zinc-950/30 rounded-2xl overflow-hidden shadow-xl flex flex-col h-full min-h-[450px]">
-                    <div class="bg-zinc-800/40 p-4 flex items-center justify-between border-b border-zinc-800">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="sword" class="text-amber-500 w-4 h-4"></i>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Itens Equipados</span>
-                        </div>
-                        <button onclick="addNewItemSlot()" class="bg-amber-700 hover:bg-amber-600 text-white p-1 rounded shadow-lg active:scale-90 transition-all">
+                <div class="app-card rounded-[2rem] overflow-hidden flex flex-col min-h-[450px]">
+                    <div class="bg-zinc-800/40 p-4 flex justify-between items-center border-b border-zinc-800">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Equipamento Ativo</span>
+                        <button onclick="addItem()" class="bg-amber-600 hover:bg-amber-500 p-1.5 rounded-lg shadow-lg active:scale-90 transition-all text-white">
                             <i data-lucide="plus" class="w-4 h-4"></i>
                         </button>
                     </div>
-                    <div id="equipped-items" class="p-4 space-y-3 overflow-y-auto max-h-[500px] flex-1 custom-scrollbar">
-                        <!-- Itens aqui -->
+                    <div id="items-list" class="p-4 space-y-3 overflow-y-auto max-h-[500px] flex-1 custom-scrollbar">
+                        <!-- Dinâmico -->
                     </div>
                 </div>
             </section>
@@ -132,231 +147,207 @@
             <!-- Notas -->
             <section class="lg:col-span-3 space-y-6">
                 <div class="space-y-2">
-                    <label class="text-[10px] uppercase font-black text-zinc-600 flex items-center gap-2 px-1">
-                        <i data-lucide="backpack" class="w-3 h-3"></i> Inventário
-                    </label>
-                    <textarea id="char-inventory" class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-xs h-40 focus:border-red-700 outline-none resize-none font-sans custom-scrollbar" placeholder="Mochila..."></textarea>
+                    <label class="text-[9px] font-black text-zinc-600 uppercase flex items-center gap-2"><i data-lucide="backpack" class="w-3 h-3"></i> Mochila</label>
+                    <textarea id="char-inv" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-xs h-32 focus:border-red-900 outline-none resize-none transition-all custom-scrollbar" placeholder="Geral..."></textarea>
                 </div>
                 <div class="space-y-2">
-                    <label class="text-[10px] uppercase font-black text-zinc-600 flex items-center gap-2 px-1">
-                        <i data-lucide="scroll" class="w-3 h-3"></i> Notas
-                    </label>
-                    <textarea id="char-notes" class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-xs h-60 focus:border-red-700 outline-none resize-none font-sans custom-scrollbar" placeholder="História, NPCs, Missões..."></textarea>
+                    <label class="text-[9px] font-black text-zinc-600 uppercase flex items-center gap-2"><i data-lucide="scroll" class="w-3 h-3"></i> Crónicas</label>
+                    <textarea id="char-notes" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-xs h-60 focus:border-red-900 outline-none resize-none transition-all custom-scrollbar" placeholder="Notas da sessão..."></textarea>
                 </div>
             </section>
         </div>
     </div>
 
-    <!-- Modal Rolagem (d6) -->
-    <div id="roll-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4 backdrop-blur-md hidden">
-        <div class="bg-zinc-900 border-2 border-red-900/40 p-10 rounded-[2.5rem] max-w-sm w-full text-center shadow-2xl">
-            <h4 id="roll-title" class="text-red-600 text-[11px] font-black uppercase tracking-[0.3em] mb-8 italic">Teste</h4>
-            <div id="roll-results" class="flex flex-wrap justify-center gap-3 mb-6"></div>
-            <div class="flex items-center justify-center gap-3 mb-8 text-zinc-500 font-bold uppercase text-[10px]">
-                <span>Soma: <span id="roll-sum">0</span></span>
-                <i data-lucide="plus" class="w-3 h-3"></i>
-                <span class="text-red-500 font-black">Bônus: <span id="roll-bonus-val">0</span></span>
+    <!-- Modal de Dados -->
+    <div id="dice-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-[100] p-6 backdrop-blur-xl hidden">
+        <div class="bg-zinc-900 border border-zinc-800 p-10 rounded-[3rem] w-full max-w-sm text-center shadow-2xl animate-in zoom-in duration-300">
+            <h4 id="modal-title" class="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-10 italic">Verificando...</h4>
+            <div id="dice-results" class="flex flex-wrap justify-center gap-4 mb-8"></div>
+            
+            <div class="flex items-center justify-center gap-3 text-zinc-500 font-bold text-[10px] uppercase tracking-widest mb-10">
+                <span class="bg-black/40 px-3 py-1 rounded-lg">Dados: <span id="modal-sum" class="text-white">0</span></span>
+                <i data-lucide="plus" class="w-3 h-3 text-red-600"></i>
+                <span class="bg-black/40 px-3 py-1 rounded-lg">Bónus: <span id="modal-bonus" class="text-red-500">0</span></span>
             </div>
-            <div class="mb-10">
-                <div class="text-zinc-600 text-[10px] uppercase font-black mb-1">Resultado Final</div>
-                <div id="roll-total" class="text-7xl font-black text-white">0</div>
+
+            <div class="mb-12">
+                <p class="text-[9px] font-black text-zinc-600 uppercase tracking-[0.5em] mb-2">Total Consolidado</p>
+                <div id="modal-total" class="text-8xl font-black text-white tracking-tighter">0</div>
             </div>
-            <button onclick="closeRollModal()" class="w-full py-4 bg-red-700 hover:bg-red-600 text-white font-black uppercase tracking-widest rounded-2xl shadow-lg active:scale-95 transition-all">Fechar</button>
+
+            <button onclick="closeModal()" class="w-full py-5 bg-white text-black font-black uppercase tracking-widest rounded-2xl active:scale-95 transition-all shadow-xl">Confirmar</button>
         </div>
     </div>
 
     <script>
-        // Dados Estruturais
-        const STORAGE_KEY = 'rpg_sheet_d6_v2';
-        let sheetData = {
-            nome: "",
-            raca: "",
+        // --- LOGICA PWA (Inlined Service Worker) ---
+        const swCode = `
+            const CACHE_NAME = 'rpg-v1';
+            self.addEventListener('install', e => {
+                e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./'])));
+            });
+            self.addEventListener('fetch', e => {
+                e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+            });
+        `;
+        const blob = new Blob([swCode], {type: 'application/javascript'});
+        const swUrl = URL.createObjectURL(blob);
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(swUrl).catch(e => console.error(e));
+        }
+
+        // --- MANIFEST PWA ---
+        const manifest = {
+            "name": "Ficha RPG d6",
+            "short_name": "RPG d6",
+            "start_url": "./",
+            "display": "standalone",
+            "background_color": "#09090b",
+            "theme_color": "#09090b",
+            "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/3246/3246733.png", "sizes": "512x512", "type": "image/png" }]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        document.getElementById('pwa-manifest').setAttribute('href', URL.createObjectURL(manifestBlob));
+
+        // --- DADOS E PERSISTENCIA ---
+        const DB_KEY = 'rpg_pwa_sheet_data';
+        let sheet = {
+            nome: "", raca: "",
             atributos: {
-                CORPO: { valor: 2, bonus: 0 },
-                MENTE: { valor: 2, bonus: 0 },
-                ESPÍRITO: { valor: 2, bonus: 0 }
+                CORPO: { v: 2, b: 0 },
+                MENTE: { v: 2, b: 0 },
+                ESPÍRITO: { v: 2, b: 0 }
             },
-            vida: { atual: 10, max: 10 },
-            itens: [],
-            mochila: "",
-            notas: ""
+            vida: { c: 10, m: 10 },
+            itens: [], gear: "", notes: ""
         };
 
-        // Carregamento Inicial
         window.onload = () => {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                try {
-                    sheetData = JSON.parse(saved);
-                } catch(e) { console.error("Erro ao carregar localStorage"); }
-            }
-            populateUI();
+            const saved = localStorage.getItem(DB_KEY);
+            if (saved) sheet = JSON.parse(saved);
+            loadUI();
             lucide.createIcons();
         };
 
-        function populateUI() {
-            document.getElementById('char-name').value = sheetData.nome;
-            document.getElementById('char-race').value = sheetData.raca;
-            document.getElementById('hp-current').value = sheetData.vida.atual;
-            document.getElementById('hp-max').value = sheetData.vida.max;
-            document.getElementById('char-inventory').value = sheetData.mochila;
-            document.getElementById('char-notes').value = sheetData.notas;
+        function saveSheet() {
+            sheet.nome = document.getElementById('char-name').value;
+            sheet.raca = document.getElementById('char-race').value;
+            sheet.vida.c = parseInt(document.getElementById('hp-current').value) || 0;
+            sheet.vida.m = parseInt(document.getElementById('hp-max').value) || 0;
+            sheet.gear = document.getElementById('char-inv').value;
+            sheet.notes = document.getElementById('char-notes').value;
             
-            updateHPBar();
-            renderAttributes();
-            renderItems();
+            localStorage.setItem(DB_KEY, JSON.stringify(sheet));
+            
+            const msg = document.getElementById('save-msg');
+            msg.style.opacity = 1;
+            setTimeout(() => msg.style.opacity = 0, 2000);
         }
 
-        // --- SALVAMENTO MANUAL ---
-        function saveToLocal() {
-            // Capturar dados dos inputs de texto e vida
-            sheetData.nome = document.getElementById('char-name').value;
-            sheetData.raca = document.getElementById('char-race').value;
-            sheetData.vida.atual = parseInt(document.getElementById('hp-current').value) || 0;
-            sheetData.vida.max = parseInt(document.getElementById('hp-max').value) || 0;
-            sheetData.mochila = document.getElementById('char-inventory').value;
-            sheetData.notas = document.getElementById('char-notes').value;
-
-            // Atributos e Itens já são atualizados em tempo real no objeto 'sheetData' pelas funções modAttr/updateItem
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(sheetData));
-
-            // Notificação Visual
-            const status = document.getElementById('save-status');
-            status.style.opacity = "1";
-            setTimeout(() => status.style.opacity = "0", 2500);
+        function loadUI() {
+            document.getElementById('char-name').value = sheet.nome;
+            document.getElementById('char-race').value = sheet.raca;
+            document.getElementById('hp-current').value = sheet.vida.c;
+            document.getElementById('hp-max').value = sheet.vida.m;
+            document.getElementById('char-inv').value = sheet.gear;
+            document.getElementById('char-notes').value = sheet.notes;
+            updateHP();
+            renderAttrs();
+            renderItems();
         }
 
         // --- VIDA ---
-        function updateHPBar() {
-            const cur = parseInt(document.getElementById('hp-current').value) || 0;
-            const max = parseInt(document.getElementById('hp-max').value) || 1;
-            const pct = (cur / max) * 100;
+        function updateHP() {
+            const c = parseInt(document.getElementById('hp-current').value) || 0;
+            const m = parseInt(document.getElementById('hp-max').value) || 1;
+            const pct = (c / m) * 100;
             document.getElementById('hp-bar').style.width = Math.min(100, Math.max(0, pct)) + '%';
         }
-
-        function adjustHP(delta) {
+        function changeHP(d) {
             const el = document.getElementById('hp-current');
-            const max = parseInt(document.getElementById('hp-max').value) || 1;
-            let val = (parseInt(el.value) || 0) + delta;
-            el.value = Math.max(0, Math.min(max, val));
-            updateHPBar();
+            const m = parseInt(document.getElementById('hp-max').value) || 1;
+            el.value = Math.max(0, Math.min(m, (parseInt(el.value) || 0) + d));
+            updateHP();
         }
 
         // --- ATRIBUTOS ---
-        function renderAttributes() {
-            const container = document.getElementById('attributes-list');
-            container.innerHTML = '';
-            
-            Object.entries(sheetData.atributos).forEach(([key, data]) => {
+        function renderAttrs() {
+            const cont = document.getElementById('attributes-list');
+            cont.innerHTML = '';
+            Object.entries(sheet.atributos).forEach(([k, d]) => {
                 const div = document.createElement('div');
-                div.className = 'bg-zinc-900 border-2 border-zinc-800 p-4 rounded-2xl relative shadow-lg hover:border-zinc-700 transition-colors';
+                div.className = 'app-card p-4 rounded-2xl flex flex-col gap-4';
                 div.innerHTML = `
-                    <div class="flex justify-between items-center mb-3">
-                        <span class="text-[10px] font-black text-zinc-500 tracking-widest uppercase italic">${key}</span>
-                        <button onclick="rollD6('${key}')" class="text-red-500 hover:scale-125 transition-transform">
-                            <i data-lucide="dices" class="w-5 h-5"></i>
-                        </button>
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-black text-zinc-600 tracking-widest">${k}</span>
+                        <button onclick="roll('${k}')" class="text-red-600 hover:scale-110 active:scale-90 transition-transform"><i data-lucide="dice-6" class="w-5 h-5"></i></button>
                     </div>
-                    <div class="flex items-center justify-between gap-4">
-                        <div class="flex flex-col items-center flex-1">
-                            <span class="text-[9px] uppercase font-bold text-zinc-600 mb-1">Dados (d6)</span>
-                            <div class="flex items-center gap-3">
-                                <button onclick="modAttr('${key}', 'valor', -1)" class="text-zinc-600 hover:text-white transition-colors"><i data-lucide="minus-circle" class="w-4 h-4"></i></button>
-                                <span class="text-3xl font-black text-white">${data.valor}</span>
-                                <button onclick="modAttr('${key}', 'valor', 1)" class="text-zinc-600 hover:text-white transition-colors"><i data-lucide="plus-circle" class="w-4 h-4"></i></button>
+                    <div class="flex items-center justify-between">
+                        <div class="text-center flex-1">
+                            <p class="text-[7px] font-black text-zinc-700 uppercase mb-1">Dados</p>
+                            <div class="flex items-center justify-center gap-3">
+                                <button onclick="modAt('${k}',-1)" class="text-zinc-600"><i data-lucide="minus-square" class="w-4 h-4"></i></button>
+                                <span class="text-3xl font-black text-white">${d.v}</span>
+                                <button onclick="modAt('${k}',1)" class="text-zinc-600"><i data-lucide="plus-square" class="w-4 h-4"></i></button>
                             </div>
                         </div>
-                        <div class="w-px h-12 bg-zinc-800"></div>
-                        <div class="flex flex-col items-center flex-1">
-                            <span class="text-[9px] uppercase font-bold text-zinc-600 mb-1">Bônus Fixo</span>
-                            <div class="flex items-center gap-1">
-                                <span class="text-xl font-bold text-zinc-700">+</span>
-                                <input type="number" value="${data.bonus}" onchange="updateAttrBonus('${key}', this.value)" class="bg-zinc-800/50 border border-zinc-700 w-12 text-center rounded-lg text-lg font-black text-red-500 outline-none">
-                            </div>
+                        <div class="w-px h-8 bg-zinc-800"></div>
+                        <div class="text-center flex-1">
+                            <p class="text-[7px] font-black text-zinc-700 uppercase mb-1">Bónus</p>
+                            <input type="number" value="${d.b}" onchange="upAt('${k}',this.value)" class="bg-zinc-800 border border-zinc-700 w-12 text-center rounded-lg text-lg font-black text-red-500 outline-none">
                         </div>
                     </div>
                 `;
-                container.appendChild(div);
+                cont.appendChild(div);
             });
             lucide.createIcons();
         }
+        function modAt(k, d) { sheet.atributos[k].v = Math.max(1, sheet.atributos[k].v + d); renderAttrs(); }
+        function upAt(k, v) { sheet.atributos[k].b = parseInt(v) || 0; }
 
-        function modAttr(key, field, delta) {
-            sheetData.atributos[key][field] = Math.max(1, sheetData.atributos[key][field] + delta);
-            renderAttributes();
-        }
-
-        function updateAttrBonus(key, val) {
-            sheetData.atributos[key].bonus = parseInt(val) || 0;
-        }
-
-        // --- ITENS EQUIPADOS ---
+        // --- ITENS ---
         function renderItems() {
-            const container = document.getElementById('equipped-items');
-            container.innerHTML = sheetData.itens.length === 0 ? '<div class="text-center py-12 opacity-10 text-sm font-bold italic uppercase tracking-widest">Nenhum Equipamento</div>' : '';
-            
-            sheetData.itens.forEach((item, idx) => {
+            const cont = document.getElementById('items-list');
+            cont.innerHTML = sheet.itens.length === 0 ? '<p class="text-center py-10 opacity-10 text-[10px] uppercase font-black tracking-widest italic">Slot Vazio</p>' : '';
+            sheet.itens.forEach((it, i) => {
                 const div = document.createElement('div');
-                div.className = 'bg-zinc-900/50 border border-zinc-800 p-3.5 rounded-xl group relative hover:border-amber-900/40 transition-all';
+                div.className = 'bg-black/20 border border-zinc-800 p-4 rounded-2xl group relative';
                 div.innerHTML = `
-                    <div class="flex flex-col gap-1.5">
-                        <input value="${item.nome}" onchange="updateItem(${idx}, 'nome', this.value)" placeholder="Nome do Item..." class="bg-transparent border-b border-zinc-800 focus:border-amber-700 outline-none text-sm font-bold text-white placeholder:text-zinc-700">
-                        <input value="${item.desc}" onchange="updateItem(${idx}, 'desc', this.value)" placeholder="Efeito ou Dano..." class="bg-transparent text-[11px] text-amber-500 outline-none italic font-medium">
-                    </div>
-                    <button onclick="removeItem(${idx})" class="absolute -top-1.5 -right-1.5 bg-zinc-950 text-zinc-700 hover:text-red-500 p-1 rounded-full border border-zinc-800 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <i data-lucide="x" class="w-3 h-3"></i>
-                    </button>
+                    <input value="${it.n}" onchange="upIt(${i},'n',this.value)" placeholder="NOME DO ITEM" class="bg-transparent w-full text-xs font-black text-white outline-none mb-1">
+                    <input value="${it.e}" onchange="upIt(${i},'e',this.value)" placeholder="EFEITO / DANO" class="bg-transparent w-full text-[9px] text-amber-500 italic outline-none">
+                    <button onclick="remIt(${i})" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-zinc-800 hover:text-red-600 transition-opacity"><i data-lucide="x" class="w-3 h-3"></i></button>
                 `;
-                container.appendChild(div);
+                cont.appendChild(div);
             });
             lucide.createIcons();
         }
+        function addItem() { sheet.itens.push({ n: "", e: "" }); renderItems(); }
+        function remIt(i) { sheet.itens.splice(i, 1); renderItems(); }
+        function upIt(i, f, v) { sheet.itens[i][f] = v; }
 
-        function addNewItemSlot() {
-            sheetData.itens.push({ nome: "", desc: "" });
-            renderItems();
-        }
-
-        function removeItem(idx) {
-            sheetData.itens.splice(idx, 1);
-            renderItems();
-        }
-
-        function updateItem(idx, field, val) {
-            sheetData.itens[idx][field] = val;
-        }
-
-        // --- SISTEMA DE DADOS ---
-        function rollD6(key) {
-            const attr = sheetData.atributos[key];
-            const qtd = attr.valor;
-            let results = [];
-            for(let i=0; i<qtd; i++) results.push(Math.floor(Math.random() * 6) + 1);
+        // --- ROLAGEM ---
+        function roll(k) {
+            const at = sheet.atributos[k];
+            let res = [];
+            for(let i=0; i<at.v; i++) res.push(Math.floor(Math.random() * 6) + 1);
+            const sum = res.reduce((a, b) => a + b, 0);
             
-            const rawSum = results.reduce((a, b) => a + b, 0);
-            const total = rawSum + attr.bonus;
-
-            document.getElementById('roll-title').innerText = `Teste de ${key}`;
-            document.getElementById('roll-sum').innerText = rawSum;
-            document.getElementById('roll-bonus-val').innerText = attr.bonus;
-            document.getElementById('roll-total').innerText = total;
-
-            const resContainer = document.getElementById('roll-results');
-            resContainer.innerHTML = '';
-            results.forEach(val => {
+            document.getElementById('modal-title').innerText = `VERIFICAÇÃO: ${k}`;
+            document.getElementById('modal-sum').innerText = sum;
+            document.getElementById('modal-bonus').innerText = at.b;
+            document.getElementById('modal-total').innerText = sum + at.b;
+            
+            const diceCont = document.getElementById('dice-results');
+            diceCont.innerHTML = '';
+            res.forEach(v => {
                 const d = document.createElement('div');
-                d.className = 'w-12 h-12 bg-white text-black rounded-xl flex items-center justify-center text-2xl font-black shadow-lg transform rotate-3';
-                d.innerText = val;
-                resContainer.appendChild(d);
+                d.className = 'w-12 h-12 bg-white text-black rounded-xl flex items-center justify-center text-2xl font-black shadow-xl transform rotate-3';
+                d.innerText = v;
+                diceCont.appendChild(d);
             });
-
-            document.getElementById('roll-modal').classList.remove('hidden');
-            lucide.createIcons();
+            document.getElementById('dice-modal').classList.remove('hidden');
         }
-
-        function closeRollModal() {
-            document.getElementById('roll-modal').classList.add('hidden');
-        }
+        function closeModal() { document.getElementById('dice-modal').classList.add('hidden'); }
     </script>
 </body>
 </html>
